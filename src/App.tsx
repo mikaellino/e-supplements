@@ -1,16 +1,19 @@
 import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-
 import Home from './pages/Home'
-
+import Sidebar from './components/Sidebar'
 import './App.css'
 
 function App() {
-  const [count, setCount] = useState(0)
-
   return (
-    <Home />
+    <div className="flex h-screen bg-gray-100">
+      {/* Sidebar */}
+      <Sidebar />
+      
+      {/* Main Content */}
+      <div className="flex-1 overflow-auto">
+        <Home />
+      </div>
+    </div>
   )
 }
 
