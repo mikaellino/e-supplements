@@ -1,10 +1,18 @@
+<<<<<<< HEAD
 import React from 'react';
+=======
+// src/components/Sidebar.tsx
+
+import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
+>>>>>>> c2589252adf0fa3ccc6be7a411edb821b0158968
 import logo from '../assets/e-supp-logo.png';
 
 interface Category {
   id: string;
   name: string;
   icon: string;
+  path: string;
 }
 
 interface SidebarProps {
@@ -14,11 +22,12 @@ interface SidebarProps {
 
 const Sidebar: React.FC<SidebarProps> = ({ onPageChange, currentPage }) => {
   const categories: Category[] = [
-    { id: 'home', name: 'Home', icon: '🏠' },
-    { id: 'whey', name: 'Whey Protein', icon: '💪' },
-    { id: 'creatina', name: 'Creatina', icon: '⚡' },
-    { id: 'vitaminas', name: 'Vitaminas', icon: '🍊' },
-    { id: 'pre-treino', name: 'Pré-Treino', icon: '🔥' },
+    { id: 'whey', name: 'Whey Protein', icon: '💪', path: '/whey' },
+    { id: 'creatina', name: 'Creatina', icon: '⚡', path: '/creatina' },
+    { id: 'bcaa', name: 'BCAA', icon: '🧬', path: '/bcaa' },
+    { id: 'vitaminas', name: 'Vitaminas', icon: '🍊', path: '/vitaminas' },
+    { id: 'pre-treino', name: 'Pré-Treino', icon: '🔥', path: '/pre-treino' },
+    { id: 'omega', name: 'Ômega 3', icon: '🐟', path: '/omega' },
   ];
 
   const handleCategoryClick = (categoryId: string) => {
@@ -28,7 +37,6 @@ const Sidebar: React.FC<SidebarProps> = ({ onPageChange, currentPage }) => {
 
   return (
     <div className="w-64 h-screen bg-gradient-to-b from-orange-900 to-orange-400 text-white shadow-2xl">
-
       {/* Header */}
       <div className="p-6 border-b border-orange-700">
         <div className="flex justify-center">
@@ -43,15 +51,15 @@ const Sidebar: React.FC<SidebarProps> = ({ onPageChange, currentPage }) => {
         </p>
       </div>
 
-      {/* Categories */}
       <div className="p-4">
         <h2 className="text-lg font-semibold mb-4 text-orange-200">
           Categorias
         </h2>
         <nav className="space-y-2">
           {categories.map((category) => (
-            <button
+            <Link 
               key={category.id}
+              to={category.path}
               onClick={() => handleCategoryClick(category.id)}
               className={`
                 w-full flex items-center space-x-3 px-4 py-3 rounded-lg
@@ -69,7 +77,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onPageChange, currentPage }) => {
               {currentPage === category.id && (
                 <span className="ml-auto text-yellow-400">●</span>
               )}
-            </button>
+            </Link>
           ))}
         </nav>
       </div>
