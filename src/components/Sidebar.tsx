@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React from 'react';
 import logo from '../assets/e-supp-logo.png';
 
 interface Category {
@@ -7,21 +7,23 @@ interface Category {
   icon: string;
 }
 
-const Sidebar: React.FC = () => {
-  const [activeCategory, setActiveCategory] = useState<string>('whey');
+interface SidebarProps {
+  onPageChange: (page: string) => void;
+  currentPage: string;
+}
 
+const Sidebar: React.FC<SidebarProps> = ({ onPageChange, currentPage }) => {
   const categories: Category[] = [
+    { id: 'home', name: 'Home', icon: '🏠' },
     { id: 'whey', name: 'Whey Protein', icon: '💪' },
     { id: 'creatina', name: 'Creatina', icon: '⚡' },
-    { id: 'bcaa', name: 'BCAA', icon: '🧬' },
     { id: 'vitaminas', name: 'Vitaminas', icon: '🍊' },
     { id: 'pre-treino', name: 'Pré-Treino', icon: '🔥' },
-    { id: 'omega', name: 'Ômega 3', icon: '🐟' },
   ];
 
   const handleCategoryClick = (categoryId: string) => {
-    setActiveCategory(categoryId);
-    console.log(`Categoria selecionada: ${categoryId}`);
+    onPageChange(categoryId);
+    console.log(`Navegando para: ${categoryId}`);
   };
 
   return (
@@ -56,7 +58,7 @@ const Sidebar: React.FC = () => {
                 transition-all duration-200 ease-in-out
                 hover:bg-orange-700 hover:scale-105
                 ${
-                  activeCategory === category.id
+                  currentPage === category.id
                     ? 'bg-orange-600 shadow-lg border-l-4 border-yellow-400'
                     : 'bg-orange-800/50 hover:bg-orange-700'
                 }
@@ -64,7 +66,7 @@ const Sidebar: React.FC = () => {
             >
               <span className="text-xl">{category.icon}</span>
               <span className="font-medium">{category.name}</span>
-              {activeCategory === category.id && (
+              {currentPage === category.id && (
                 <span className="ml-auto text-yellow-400">●</span>
               )}
             </button>
