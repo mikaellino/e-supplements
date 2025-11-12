@@ -1,15 +1,56 @@
 import React from 'react';
+import ProductList from '../components/ProductList';
+import wheyDefaultImage from '../assets/wheypadrao.webp';
+
+const vitaminesProducts = [
+  {
+    id: 201,
+    name: 'Vitamina C 1000mg',
+    price: 39.90,
+    image: wheyDefaultImage,
+    quantity: 60,
+  },
+  {
+    id: 202,
+    name: 'Vitamina D3 2000 IU',
+    price: 59.90,
+    image: wheyDefaultImage,
+    quantity: 40,
+  },
+  {
+    id: 203,
+    name: 'Complexo B Premium',
+    price: 49.90,
+    image: wheyDefaultImage,
+    quantity: 50,
+  },
+  {
+    id: 204,
+    name: 'Ômega 3 1000mg',
+    price: 69.90,
+    image: wheyDefaultImage,
+    quantity: 35,
+  },
+  {
+    id: 205,
+    name: 'Multivitamínico Completo',
+    price: 89.90,
+    image: wheyDefaultImage,
+    quantity: 45,
+  },
+  {
+    id: 206,
+    name: 'Ferro + Vitamina C',
+    price: 44.90,
+    image: wheyDefaultImage,
+    quantity: 55,
+  },
+];
 
 const Vitaminas: React.FC = () => {
   return (
-    <div className="min-h-screen bg-gradient-to-b from-orange-900 to-orange-400 flex items-center justify-center">
-      <div className="text-center">
-        <h1 className="text-4xl font-bold text-white mb-4 drop-shadow-lg">Vitaminas</h1>
-        <p className="text-xl text-orange-100 mb-8">Página em desenvolvimento</p>
-        <div className="bg-white/10 backdrop-blur-sm rounded-xl p-8 border border-orange-300/30">
-          <p className="text-orange-100">Em breve você encontrará aqui nossa linha completa de vitaminas!</p>
-        </div>
-      </div>
+    <div>
+      <ProductList products={vitaminesProducts} title="Vitaminas" />
     </div>
   );
 };

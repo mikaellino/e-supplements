@@ -26,6 +26,27 @@ const wheyProducts = [
     image: wheyDefaultImage,
     quantity: 75,
   },
+  {
+    id: 4,
+    name: 'Whey Isolado Premium',
+    price: 219.90,
+    image: wheyDefaultImage,
+    quantity: 25,
+  },
+  {
+    id: 5,
+    name: 'Whey Protein Hidrolisado',
+    price: 249.90,
+    image: wheyDefaultImage,
+    quantity: 20,
+  },
+  {
+    id: 6,
+    name: 'Whey Gourmet Chocolate',
+    price: 139.90,
+    image: wheyDefaultImage,
+    quantity: 40,
+  },
 ];
 
 const Whey: React.FC = () => {
