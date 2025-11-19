@@ -10,6 +10,7 @@ interface User {
 interface AuthContextType {
   isLoggedIn: boolean;
   user: User | null;
+  isLoggingOut: boolean;
   login: (email: string, password: string) => Promise<void>;
   register: (name: string, email: string, password: string) => Promise<void>;
   logout: () => void;
@@ -20,6 +21,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [user, setUser] = useState<User | null>(null);
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
 
   // Ao iniciar, verifica se já tem token salvo (Persistência)
   useEffect(() => {
@@ -69,14 +71,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const logout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
-    setIsLoggedIn(false);
-    setUser(null);
+    setIsLoggingOut(true);
+    
+    // Simula um pequeno delay para mostrar o loading
+    setTimeout(() => {
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      setIsLoggedIn(false);
+      setUser(null);
+      setIsLoggingOut(false);
+    }, 1500);
   };
 
   return (
-    <AuthContext.Provider value={{ isLoggedIn, user, login, register, logout }}>
+    <AuthContext.Provider value={{ isLoggedIn, user, isLoggingOut, login, register, logout }}>
       {children}
     </AuthContext.Provider>
   );
