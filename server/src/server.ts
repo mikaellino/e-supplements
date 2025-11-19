@@ -36,6 +36,14 @@ const authenticateToken = (req: any, res: any, next: any) => {
     });
 };
 
+// Verifica se usuário é admin
+const isAdmin = (req: any, res: any, next: any) => {
+    if (req.user.role !== 'admin') {
+        return res.status(403).json({ error: 'Acesso negado: Apenas administradores.' });
+    }
+    next();
+};
+
 const JWT_SECRET = 'sua_chave_super_secreta_123';
 
 // 1. REGISTRO DE USUÁRIO
@@ -204,6 +212,39 @@ app.get('/api/my-orders', authenticateToken, async (req: any, res: any): Promise
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: 'Erro ao buscar pedidos' });
+    }
+});
+
+// 5. ADICIONAR PRODUTO (Protegido: Token + Admin)
+app.post('/api/products', authenticateToken, isAdmin, async (req: any, res: any): Promise<any> => {
+    const { category_id, name, description, price, stock_quantity, image_url } = req.body;
+
+    try {
+        const [result]: any = await pool.query(
+            'INSERT INTO products (category_id, name, description, price, stock_quantity, image_url) VALUES (?, ?, ?, ?, ?, ?)',
+            [category_id, name, description, price, stock_quantity, image_url]
+        );
+        res.status(201).json({ message: 'Produto criado!', id: result.insertId });
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Erro ao criar produto' });
+    }
+});
+
+// 6. REMOVER PRODUTO (Protegido: Token + Admin)
+app.delete('/api/products/:id', authenticateToken, isAdmin, async (req: any, res: any): Promise<any> => {
+    const { id } = req.params;
+
+    try {
+        await pool.query('DELETE FROM products WHERE id = ?', [id]);
+        
+        res.json({ message: 'Produto removido com sucesso!' });
+    } catch (error: any) {
+        if (error.code === 'ER_ROW_IS_REFERENCED_2') { 
+            return res.status(400).json({ error: 'Não é possível apagar este produto pois ele já possui vendas.' });
+        }
+        console.error(error);
+        res.status(500).json({ error: 'Erro ao remover produto' });
     }
 });
 
