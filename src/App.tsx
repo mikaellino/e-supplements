@@ -11,6 +11,7 @@ import { CartProvider } from './context/CartContext'
 import { AuthProvider } from './context/AuthContext'
 import { ProductProvider } from './context/ProductContext'
 import { useProduct } from './context/ProductContext'
+import MeusPedidos from './pages/MeusPedidos';
 
 import './App.css'
 
@@ -34,6 +35,8 @@ function AppContent() {
         return <Vitaminas />;
       case 'pre-treino':
         return <PreTreino />;
+      case 'meus-pedidos':
+        return <MeusPedidos />;
       default:
         return <Home />;
     }

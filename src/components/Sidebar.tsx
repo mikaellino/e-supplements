@@ -31,6 +31,7 @@ const Sidebar: React.FC<SidebarProps> = ({ onPageChange, currentPage }) => {
     { id: 'creatina', name: 'Creatina', icon: '⚡', path: '/creatina' },
     { id: 'vitaminas', name: 'Vitaminas', icon: '🍊', path: '/vitaminas' },
     { id: 'pre-treino', name: 'Pré-Treino', icon: '🔥', path: '/pre-treino' },
+    { id: 'meus-pedidos', name: 'Meus Pedidos', icon: '📦', path: '/meus-pedidos' },
   ];
 
   const handleCategoryClick = (categoryId: string) => {
