@@ -1,49 +1,46 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import ProductList from '../components/ProductList';
-import wheyDefaultImage from '../assets/wheypadrao.webp';
 
-const creatineProducts = [
-  {
-    id: 101,
-    name: 'Creatina Monohidratada 300g',
-    price: 49.90,
-    image: wheyDefaultImage,
-    quantity: 45,
-  },
-  {
-    id: 102,
-    name: 'Creatina Monohidratada 1kg',
-    price: 129.90,
-    image: wheyDefaultImage,
-    quantity: 25,
-  },
-  {
-    id: 103,
-    name: 'Creatina Micronizada',
-    price: 79.90,
-    image: wheyDefaultImage,
-    quantity: 35,
-  },
-  {
-    id: 104,
-    name: 'Creatina com Transportador',
-    price: 99.90,
-    image: wheyDefaultImage,
-    quantity: 20,
-  },
-  {
-    id: 105,
-    name: 'Creatina Buffered (pH-X)',
-    price: 119.90,
-    image: wheyDefaultImage,
-    quantity: 30,
-  },
-];
+interface Product {
+  id: number;
+  name: string;
+  price: number;
+  image: string;
+  quantity: number;
+}
 
 const Creatina: React.FC = () => {
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch('http://localhost:3000/api/products')
+      .then(response => response.json())
+      .then(data => {
+        const creatinaOnly = data.filter((item: any) => item.category_id === 2);
+
+        const formattedProducts = creatinaOnly.map((item: any) => ({
+          id: item.id,
+          name: item.name,
+          price: parseFloat(item.price),
+          image: item.image_url,
+          quantity: item.stock_quantity
+        }));
+
+        setProducts(formattedProducts);
+        setLoading(false);
+      })
+      .catch(error => {
+        console.error("Erro:", error);
+        setLoading(false);
+      });
+  }, []);
+
+  if (loading) return <div className="text-center py-10 font-bold text-orange-900">Carregando Creatinas...</div>;
+
   return (
     <div>
-      <ProductList products={creatineProducts} title="Creatina" />
+      <ProductList products={products} title="Creatina (Do Banco!)" />
     </div>
   );
 };

@@ -1,56 +1,46 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import ProductList from '../components/ProductList';
-import wheyDefaultImage from '../assets/wheypadrao.webp';
 
-const preworkoutProducts = [
-  {
-    id: 301,
-    name: 'Pré-Treino Explosivo 300g',
-    price: 99.90,
-    image: wheyDefaultImage,
-    quantity: 40,
-  },
-  {
-    id: 302,
-    name: 'Pré-Treino C4 Original',
-    price: 139.90,
-    image: wheyDefaultImage,
-    quantity: 25,
-  },
-  {
-    id: 303,
-    name: 'Cafeína Pura 100g',
-    price: 59.90,
-    image: wheyDefaultImage,
-    quantity: 50,
-  },
-  {
-    id: 304,
-    name: 'Beta-Alanina Premium',
-    price: 79.90,
-    image: wheyDefaultImage,
-    quantity: 35,
-  },
-  {
-    id: 305,
-    name: 'Pré-Treino com DMAA',
-    price: 149.90,
-    image: wheyDefaultImage,
-    quantity: 20,
-  },
-  {
-    id: 306,
-    name: 'L-Arginina 500g',
-    price: 69.90,
-    image: wheyDefaultImage,
-    quantity: 45,
-  },
-];
+interface Product {
+  id: number;
+  name: string;
+  price: number;
+  image: string;
+  quantity: number;
+}
 
 const PreTreino: React.FC = () => {
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch('http://localhost:3000/api/products')
+      .then(response => response.json())
+      .then(data => {
+        const preTreinoOnly = data.filter((item: any) => item.category_id === 4);
+
+        const formattedProducts = preTreinoOnly.map((item: any) => ({
+          id: item.id,
+          name: item.name,
+          price: parseFloat(item.price),
+          image: item.image_url,
+          quantity: item.stock_quantity
+        }));
+
+        setProducts(formattedProducts);
+        setLoading(false);
+      })
+      .catch(error => {
+        console.error("Erro:", error);
+        setLoading(false);
+      });
+  }, []);
+
+  if (loading) return <div className="text-center py-10 font-bold text-orange-900">Carregando Pré-Treinos...</div>;
+
   return (
     <div>
-      <ProductList products={preworkoutProducts} title="Pré-Treino" />
+      <ProductList products={products} title="Pré-Treino (Do Banco!)" />
     </div>
   );
 };

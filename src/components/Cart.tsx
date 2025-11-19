@@ -10,16 +10,49 @@ interface CartProps {
 
 const Cart: React.FC<CartProps> = ({ isOpen, onClose }) => {
   const { items, removeFromCart, updateQuantity, total, clearCart } = useCart();
-  const { isLoggedIn } = useAuth();
+  const { isLoggedIn, user } = useAuth();
   const [loginOpen, setLoginOpen] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
 
-  const handleFinalizePurchase = () => {
-    if (!isLoggedIn) {
+  const handleFinalizePurchase = async () => {
+    if (!isLoggedIn || !user) {
       setLoginOpen(true);
-    } else {
-      alert('✅ Compra finalizada com sucesso! Obrigado pela compra.');
-      clearCart();
-      onClose();
+      return;
+    }
+
+    setIsProcessing(true);
+
+    try {
+      const payload = {
+        userId: user.id,
+        items: items.map(item => ({
+          id: item.id,
+          quantity: item.cartQuantity,
+          price: item.price
+        }))
+      };
+
+      const response = await fetch('http://localhost:3000/api/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      });
+
+      const data = await response.json();
+
+      if (response.ok) {
+        alert(`✅ ${data.message} (Pedido #${data.orderId})`);
+        clearCart();
+        onClose();
+      } else {
+        alert(`Erro: ${data.error}`);
+      }
+
+    } catch (error) {
+      console.error("Erro na compra:", error);
+      alert("Erro de conexão ao finalizar compra.");
+    } finally {
+      setIsProcessing(false);
     }
   };
 
@@ -91,12 +124,19 @@ const Cart: React.FC<CartProps> = ({ isOpen, onClose }) => {
                 <span className="font-bold text-orange-900">Subtotal:</span>
                 <span className="font-bold text-orange-600">R$ {total.toFixed(2)}</span>
               </div>
+              
               <button 
                 onClick={handleFinalizePurchase}
-                className="w-full bg-green-600 text-white py-3 rounded-lg hover:bg-green-700 font-semibold transition shadow-lg"
+                disabled={isProcessing}
+                className={`w-full text-white py-3 rounded-lg font-semibold transition shadow-lg
+                  ${isProcessing 
+                    ? 'bg-gray-400 cursor-not-allowed' 
+                    : 'bg-green-600 hover:bg-green-700'
+                  }`}
               >
-                {isLoggedIn ? '✓ Finalizar Compra' : '🔒 Finalizar Compra (Login)'}
+                {isProcessing ? 'Processando...' : (isLoggedIn ? '✓ Finalizar Compra' : '🔒 Finalizar Compra (Login)')}
               </button>
+              
               <button
                 onClick={clearCart}
                 className="w-full bg-gray-300 text-gray-800 py-2 rounded-lg hover:bg-gray-400 transition font-semibold"
@@ -107,7 +147,6 @@ const Cart: React.FC<CartProps> = ({ isOpen, onClose }) => {
           )}
         </div>
       </div>
-
       <LoginModal isOpen={loginOpen} onClose={() => setLoginOpen(false)} />
     </>
   );

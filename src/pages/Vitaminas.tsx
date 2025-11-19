@@ -1,56 +1,46 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import ProductList from '../components/ProductList';
-import wheyDefaultImage from '../assets/wheypadrao.webp';
 
-const vitaminesProducts = [
-  {
-    id: 201,
-    name: 'Vitamina C 1000mg',
-    price: 39.90,
-    image: wheyDefaultImage,
-    quantity: 60,
-  },
-  {
-    id: 202,
-    name: 'Vitamina D3 2000 IU',
-    price: 59.90,
-    image: wheyDefaultImage,
-    quantity: 40,
-  },
-  {
-    id: 203,
-    name: 'Complexo B Premium',
-    price: 49.90,
-    image: wheyDefaultImage,
-    quantity: 50,
-  },
-  {
-    id: 204,
-    name: 'Ômega 3 1000mg',
-    price: 69.90,
-    image: wheyDefaultImage,
-    quantity: 35,
-  },
-  {
-    id: 205,
-    name: 'Multivitamínico Completo',
-    price: 89.90,
-    image: wheyDefaultImage,
-    quantity: 45,
-  },
-  {
-    id: 206,
-    name: 'Ferro + Vitamina C',
-    price: 44.90,
-    image: wheyDefaultImage,
-    quantity: 55,
-  },
-];
+interface Product {
+  id: number;
+  name: string;
+  price: number;
+  image: string;
+  quantity: number;
+}
 
 const Vitaminas: React.FC = () => {
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch('http://localhost:3000/api/products')
+      .then(response => response.json())
+      .then(data => {
+        const vitaminasOnly = data.filter((item: any) => item.category_id === 3);
+
+        const formattedProducts = vitaminasOnly.map((item: any) => ({
+          id: item.id,
+          name: item.name,
+          price: parseFloat(item.price),
+          image: item.image_url,
+          quantity: item.stock_quantity
+        }));
+
+        setProducts(formattedProducts);
+        setLoading(false);
+      })
+      .catch(error => {
+        console.error("Erro:", error);
+        setLoading(false);
+      });
+  }, []);
+
+  if (loading) return <div className="text-center py-10 font-bold text-orange-900">Carregando Vitaminas...</div>;
+
   return (
     <div>
-      <ProductList products={vitaminesProducts} title="Vitaminas" />
+      <ProductList products={products} title="Vitaminas (Do Banco!)" />
     </div>
   );
 };
