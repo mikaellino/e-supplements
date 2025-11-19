@@ -22,6 +22,20 @@ const pool = mysql.createPool({
     queueLimit: 0
 });
 
+// --- MIDDLEWARE DE SEGURANÇA ---
+const authenticateToken = (req: any, res: any, next: any) => {
+    const authHeader = req.headers['authorization'];
+    const token = authHeader && authHeader.split(' ')[1]; 
+
+    if (!token) return res.status(401).json({ error: 'Acesso negado' });
+
+    jwt.verify(token, JWT_SECRET, (err: any, user: any) => {
+        if (err) return res.status(403).json({ error: 'Token inválido' });
+        req.user = user;
+        next();
+    });
+};
+
 const JWT_SECRET = 'sua_chave_super_secreta_123';
 
 // 1. REGISTRO DE USUÁRIO
@@ -162,6 +176,34 @@ app.post('/api/checkout', async (req, res): Promise<any> => {
         res.status(500).json({ error: 'Erro ao processar a compra.' });
     } finally {
         connection.release();
+    }
+});
+
+app.get('/api/my-orders', authenticateToken, async (req: any, res: any): Promise<any> => {
+    const userId = req.user.id;
+
+    try {
+        const query = `
+            SELECT 
+                o.id, 
+                o.total_amount, 
+                o.status, 
+                o.created_at,
+                GROUP_CONCAT(CONCAT(p.name, ' (', oi.quantity, ')') SEPARATOR ', ') as items_summary
+            FROM orders o
+            JOIN order_items oi ON o.id = oi.order_id
+            JOIN products p ON oi.product_id = p.id
+            WHERE o.user_id = ?
+            GROUP BY o.id
+            ORDER BY o.created_at DESC
+        `;
+
+        const [rows] = await pool.query(query, [userId]);
+        res.json(rows);
+
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Erro ao buscar pedidos' });
     }
 });
 
