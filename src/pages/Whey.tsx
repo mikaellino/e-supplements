@@ -1,58 +1,50 @@
-// src/pages/Whey.tsx
-
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import ProductList from '../components/ProductList';
-import wheyDefaultImage from '../assets/wheypadrao.webp';
 
-const wheyProducts = [
-  {
-    id: 1,
-    name: 'Whey Protein Concentrado',
-    price: 129.90,
-    image: wheyDefaultImage,
-    quantity: 50,
-  },
-  {
-    id: 2,
-    name: 'Whey Protein Isolado',
-    price: 189.90,
-    image: wheyDefaultImage,
-    quantity: 30,
-  },
-  {
-    id: 3,
-    name: 'Blend de Proteínas',
-    price: 109.90,
-    image: wheyDefaultImage,
-    quantity: 75,
-  },
-  {
-    id: 4,
-    name: 'Whey Isolado Premium',
-    price: 219.90,
-    image: wheyDefaultImage,
-    quantity: 25,
-  },
-  {
-    id: 5,
-    name: 'Whey Protein Hidrolisado',
-    price: 249.90,
-    image: wheyDefaultImage,
-    quantity: 20,
-  },
-  {
-    id: 6,
-    name: 'Whey Gourmet Chocolate',
-    price: 139.90,
-    image: wheyDefaultImage,
-    quantity: 40,
-  },
-];
+interface Product {
+  id: number;
+  name: string;
+  price: number;
+  image: string;
+  quantity: number;
+}
 
 const Whey: React.FC = () => {
+  // Estado para armazenar os produtos que virão do Backend
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch('http://localhost:3000/api/products')
+      .then(response => response.json())
+      .then(data => {
+        const wheyOnly = data.filter((item: any) => item.category_id === 1);
+
+        // 3. Transforma os dados do Banco para o formato do React
+        const formattedProducts = wheyOnly.map((item: any) => ({
+          id: item.id,
+          name: item.name,
+          price: parseFloat(item.price),
+          image: item.image_url,
+          quantity: item.stock_quantity
+        }));
+
+        setProducts(formattedProducts);
+        setLoading(false);
+      })
+      .catch(error => {
+        console.error("Erro ao buscar produtos:", error);
+        setLoading(false);
+      });
+  }, []);
+
+  if (loading) {
+    return <div className="text-center py-10 font-bold text-orange-900">Carregando produtos...</div>;
+  }
+
   return (
     <div>
-      <ProductList products={wheyProducts} title="Whey Protein" />
+      <ProductList products={products} title="Whey Protein (Do Banco de Dados!)" />
     </div>
   );
 };
