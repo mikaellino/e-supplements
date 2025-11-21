@@ -1,11 +1,11 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useState, useEffect } from 'react';
 
 export interface CartItem {
   id: number;
   name: string;
   price: number;
   image: string;
-  quantity: number;
+  quantity: number; // Stock available
   cartQuantity: number;
 }
 
@@ -23,15 +23,33 @@ const CartContext = createContext<CartContextType | undefined>(undefined);
 export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [items, setItems] = useState<CartItem[]>([]);
 
-  const addToCart = (item: CartItem) => {
+  // Load Cart from localStorage
+  useEffect(() => {
+    const storedCart = localStorage.getItem('cart');
+    if (storedCart) {
+      setItems(JSON.parse(storedCart));
+    }
+  }, []);
+
+  // Save Cart to localStorage
+  useEffect(() => {
+    localStorage.setItem('cart', JSON.stringify(items));
+  }, [items]);
+
+  const addToCart = (newItem: CartItem) => {
     setItems(prevItems => {
-      const existingItem = prevItems.find(i => i.id === item.id);
+      const existingItem = prevItems.find(i => i.id === newItem.id);
       if (existingItem) {
+        // Check stock before adding
+        if (existingItem.cartQuantity + 1 > newItem.quantity) {
+          alert(`Estoque insuficiente! Apenas ${newItem.quantity} unidades disponíveis.`);
+          return prevItems;
+        }
         return prevItems.map(i =>
-          i.id === item.id ? { ...i, cartQuantity: i.cartQuantity + 1 } : i
+          i.id === newItem.id ? { ...i, cartQuantity: i.cartQuantity + 1 } : i
         );
       }
-      return [...prevItems, { ...item, cartQuantity: 1 }];
+      return [...prevItems, { ...newItem, cartQuantity: 1 }];
     });
   };
 
@@ -42,13 +60,22 @@ export const CartProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const updateQuantity = (id: number, quantity: number) => {
     if (quantity <= 0) {
       removeFromCart(id);
-    } else {
-      setItems(prevItems =>
-        prevItems.map(item =>
-          item.id === id ? { ...item, cartQuantity: quantity } : item
-        )
-      );
+      return;
     }
+
+    setItems(prevItems => {
+      return prevItems.map(item => {
+        if (item.id === id) {
+          // Check stock limit
+          if (quantity > item.quantity) {
+            alert(`Quantidade máxima atingida! Estoque: ${item.quantity}`);
+            return item;
+          }
+          return { ...item, cartQuantity: quantity };
+        }
+        return item;
+      });
+    });
   };
 
   const clearCart = () => setItems([]);

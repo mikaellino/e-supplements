@@ -169,8 +169,8 @@ const Sidebar: React.FC<SidebarProps> = ({ onPageChange, currentPage }) => {
         </div>
       </div>
 
-      <Cart isOpen={cartOpen} onClose={() => setCartOpen(false)} />
-      <LoginModal isOpen={loginOpen} onClose={() => setLoginOpen(false)} />
+      <Cart isOpen={cartOpen} onClose={() => setCartOpen(false)} onNavigate={onPageChange} />
+      <LoginModal isOpen={loginOpen} onClose={() => setLoginOpen(false)} onNavigate={onPageChange} />
     </>
   );
 };

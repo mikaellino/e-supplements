@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useProduct } from '../context/ProductContext';
 import { useCart } from '../context/CartContext';
 
@@ -13,6 +13,7 @@ interface NutrientData {
 const ProductDetail: React.FC = () => {
   const { selectedProduct, setSelectedProduct } = useProduct();
   const { addToCart } = useCart();
+  const [quantity, setQuantity] = useState(1);
 
   if (!selectedProduct) return null;
 
@@ -83,7 +84,7 @@ const ProductDetail: React.FC = () => {
       price: selectedProduct.price,
       image: selectedProduct.image,
       quantity: selectedProduct.quantity,
-      cartQuantity: 1,
+      cartQuantity: quantity,
     });
     alert(`✅ ${selectedProduct.name} adicionado ao carrinho!`);
   };
@@ -92,111 +93,135 @@ const ProductDetail: React.FC = () => {
   const specs = getSpecifications();
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-orange-50 to-orange-100 py-8">
-      <div className="container mx-auto px-8">
+    <div className="min-h-screen bg-zinc-950 py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto">
         {/* Botão Voltar */}
         <button
           onClick={() => setSelectedProduct(null)}
-          className="mb-6 flex items-center gap-2 text-orange-700 hover:text-orange-900 font-semibold transition"
+          className="mb-8 flex items-center gap-2 text-zinc-400 hover:text-white transition-colors group"
         >
-          ← Voltar
+          <span className="group-hover:-translate-x-1 transition-transform">←</span> Voltar para a lista
         </button>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-12">
           {/* Seção Esquerda - Imagem */}
-          <div className="flex flex-col items-center justify-center">
-            <div className="bg-white rounded-2xl shadow-2xl p-8 w-full max-w-md">
+          <div className="relative">
+            <div className="absolute inset-0 bg-gradient-to-tr from-orange-600/20 to-transparent rounded-3xl blur-2xl"></div>
+            <div className="relative glass-card rounded-3xl p-8 flex items-center justify-center h-[600px] group overflow-hidden">
+              <div className="absolute inset-0 bg-radial-gradient from-white/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
               <img
                 src={selectedProduct.image}
                 alt={selectedProduct.name}
-                className="w-full h-96 object-cover rounded-xl mb-6"
+                className="w-full h-full object-contain drop-shadow-2xl transform group-hover:scale-110 transition-transform duration-700"
               />
-              <button
-                onClick={handleAddToCart}
-                className="w-full bg-gradient-to-r from-orange-600 to-orange-700 text-white font-bold py-4 px-6 rounded-full hover:from-orange-700 hover:to-orange-800 transition-all duration-300 shadow-lg hover:shadow-xl transform hover:-translate-y-1"
-              >
-                🛒 Adicionar ao Carrinho
-              </button>
             </div>
           </div>
 
           {/* Seção Direita - Detalhes */}
           <div className="space-y-8">
-            {/* Título e Preço */}
+            {/* Header do Produto */}
             <div>
-              <h1 className="text-4xl font-bold text-orange-900 mb-2">{selectedProduct.name}</h1>
-              <p className="text-gray-600 mb-4">SKU: {String(selectedProduct.id).padStart(5, '0')}</p>
-              <div className="flex items-baseline gap-3">
-                <span className="text-5xl font-bold text-green-600">R$ {selectedProduct.price.toFixed(2)}</span>
-                <span className="text-sm text-gray-500">Em estoque: {selectedProduct.quantity} unidades</span>
+              <div className="flex items-center gap-4 mb-4">
+                <span className="px-3 py-1 rounded-full bg-orange-500/10 text-orange-500 text-sm font-bold uppercase tracking-wider border border-orange-500/20">
+                  Premium Quality
+                </span>
+                <span className="text-zinc-500 text-sm">SKU: {String(selectedProduct.id).padStart(5, '0')}</span>
               </div>
+              
+              <h1 className="text-5xl font-black text-white mb-4 leading-tight">{selectedProduct.name}</h1>
+              <p className="text-zinc-400 text-lg leading-relaxed">
+                {selectedProduct.description || 'Potencialize seus treinos com a máxima pureza e absorção. Desenvolvido para atletas que buscam performance superior.'}
+              </p>
             </div>
 
-            {/* Especificações */}
-            <div className="bg-white rounded-xl shadow-lg p-6">
-              <h2 className="text-2xl font-bold text-orange-900 mb-4">Especificações</h2>
-              <div className="space-y-3">
-                {specs.map((spec, idx) => (
-                  <div key={idx} className="flex justify-between py-2 border-b border-orange-100 last:border-b-0">
-                    <span className="font-semibold text-gray-700">{spec.label}:</span>
-                    <span className="text-gray-600">{spec.value}</span>
+            {/* Preço e Ações */}
+            <div className="glass-card p-6 rounded-2xl border-l-4 border-orange-500">
+              <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+                <div>
+                  <p className="text-zinc-400 text-sm mb-1">Preço por unidade</p>
+                  <div className="flex items-baseline gap-2">
+                    <span className="text-5xl font-black text-white">R$ {selectedProduct.price.toFixed(2)}</span>
+                    <span className="text-zinc-500 line-through text-lg">R$ {(selectedProduct.price * 1.2).toFixed(2)}</span>
                   </div>
-                ))}
+                  <p className="text-green-500 text-sm mt-2 font-medium">
+                    ✓ Em estoque: {selectedProduct.quantity} unidades
+                  </p>
+                </div>
+
+                <div className="flex flex-col gap-3 w-full md:w-auto">
+                  {/* Seletor de Quantidade */}
+                  <div className="flex items-center bg-zinc-900 rounded-lg p-1 border border-zinc-700 w-full md:w-48">
+                    <button 
+                      onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                      className="w-12 h-12 flex items-center justify-center text-zinc-400 hover:text-white hover:bg-zinc-800 rounded-md transition-colors text-xl font-bold"
+                    >
+                      -
+                    </button>
+                    <div className="flex-1 text-center font-bold text-white text-xl">{quantity}</div>
+                    <button 
+                      onClick={() => setQuantity(Math.min(selectedProduct.quantity, quantity + 1))}
+                      className="w-12 h-12 flex items-center justify-center text-zinc-400 hover:text-white hover:bg-zinc-800 rounded-md transition-colors text-xl font-bold"
+                    >
+                      +
+                    </button>
+                  </div>
+
+                  <button
+                    onClick={handleAddToCart}
+                    className="btn-primary w-full md:w-48 py-4 rounded-xl font-bold text-lg shadow-lg flex items-center justify-center gap-2"
+                  >
+                    <span>Adicionar</span>
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
+                    </svg>
+                  </button>
+                </div>
               </div>
             </div>
 
-            {/* Tabela Nutricional */}
-            <div className="bg-white rounded-xl shadow-lg p-6">
-              <h2 className="text-2xl font-bold text-orange-900 mb-4">Informação Nutricional</h2>
-              <p className="text-sm text-gray-600 mb-4">Por porção (30g)</p>
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b-2 border-orange-600 bg-orange-50">
-                      <th className="text-left py-2 px-3 font-bold text-orange-900">Nutriente</th>
-                      <th className="text-right py-2 px-3 font-bold text-orange-900">Quantidade</th>
-                      <th className="text-right py-2 px-3 font-bold text-orange-900">% VD*</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {Object.entries(nutrition).map(([key, data]) => (
-                      <tr key={key} className="border-b border-orange-100 hover:bg-orange-50 transition">
-                        <td className="py-3 px-3 text-gray-800">{data.description}</td>
-                        <td className="text-right py-3 px-3 text-gray-700 font-semibold">
-                          {data.value} {data.unit}
-                        </td>
-                        <td className="text-right py-3 px-3 text-gray-600">
-                          {Math.round(Math.random() * 40 + 10)}%
-                        </td>
+            {/* Tabs / Informações */}
+            <div className="space-y-6">
+              {/* Especificações */}
+              <div>
+                <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                  <span className="text-orange-500">📋</span> Especificações
+                </h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {specs.map((spec, idx) => (
+                    <div key={idx} className="bg-zinc-900/50 p-4 rounded-xl border border-white/5 flex justify-between items-center">
+                      <span className="text-zinc-400">{spec.label}</span>
+                      <span className="font-bold text-white">{spec.value}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Tabela Nutricional */}
+              <div>
+                <h3 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
+                  <span className="text-orange-500">⚡</span> Informação Nutricional <span className="text-sm font-normal text-zinc-500">(Porção 30g)</span>
+                </h3>
+                <div className="overflow-hidden rounded-xl border border-white/10">
+                  <table className="w-full text-sm text-left">
+                    <thead className="bg-zinc-900 text-zinc-400 uppercase">
+                      <tr>
+                        <th className="px-6 py-3">Nutriente</th>
+                        <th className="px-6 py-3 text-right">Qtd</th>
+                        <th className="px-6 py-3 text-right">% VD*</th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody className="divide-y divide-white/5 bg-zinc-900/50">
+                      {Object.entries(nutrition).map(([key, data]) => (
+                        <tr key={key} className="hover:bg-white/5 transition-colors">
+                          <td className="px-6 py-4 font-medium text-white">{data.description}</td>
+                          <td className="px-6 py-4 text-right text-zinc-300">{data.value} {data.unit}</td>
+                          <td className="px-6 py-4 text-right text-zinc-500">{Math.round(Math.random() * 40 + 10)}%</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
               </div>
-              <p className="text-xs text-gray-500 mt-3">*% Valores Diários de referência para uma dieta de 2000 kcal ou 8400 kJ.</p>
-            </div>
-
-            {/* Benefícios */}
-            <div className="bg-gradient-to-r from-orange-600 to-orange-700 rounded-xl shadow-lg p-6 text-white">
-              <h2 className="text-2xl font-bold mb-4">Benefícios</h2>
-              <ul className="space-y-2">
-                <li className="flex items-center gap-2">
-                  <span className="text-2xl">✓</span>
-                  <span>Alta qualidade e pureza garantida</span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <span className="text-2xl">✓</span>
-                  <span>Absorção rápida e eficaz</span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <span className="text-2xl">✓</span>
-                  <span>Resultado comprovado em atletas</span>
-                </li>
-                <li className="flex items-center gap-2">
-                  <span className="text-2xl">✓</span>
-                  <span>Melhor custo-benefício do mercado</span>
-                </li>
-              </ul>
             </div>
           </div>
         </div>
