@@ -3,11 +3,12 @@ import { useProduct, type Product } from '../context/ProductContext';
 import { useAuth } from '../context/AuthContext';
 
 const AdminPanel: React.FC = () => {
-  const { products, updateProduct, deleteProduct } = useProduct();
+  const { products, addProduct, updateProduct, deleteProduct } = useProduct();
   const { user } = useAuth();
   
   const [isEditing, setIsEditing] = useState(false);
   const [editId, setEditId] = useState<number | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   const [name, setName] = useState('');
   const [price, setPrice] = useState('');
@@ -54,6 +55,7 @@ const AdminPanel: React.FC = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsLoading(true);
     
     const productData = {
       name,
@@ -64,21 +66,31 @@ const AdminPanel: React.FC = () => {
       description
     };
 
-    if (isEditing && editId) {
-      // Pass full product object including ID
-      updateProduct({ ...productData, id: editId });
-      alert('Produto atualizado com sucesso!');
+    try {
+      if (isEditing && editId) {
+        await updateProduct({ ...productData, id: editId });
+        alert('Produto atualizado com sucesso!');
+      } else {
+        await addProduct(productData);
+        alert('Produto criado com sucesso!');
+      }
       handleCancelEdit();
-    } else {
-      // Simulação de criação
-      alert('Simulação: Produto Criado! (Funcionalidade de criação real pendente no Contexto)');
-      handleCancelEdit();
+    } catch (error) {
+      console.error(error);
+      alert('Erro ao salvar produto.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
-  const handleDelete = (id: number) => {
+  const handleDelete = async (id: number) => {
     if (window.confirm('Tem certeza que deseja excluir este produto?')) {
-      deleteProduct(id);
+      try {
+        await deleteProduct(id);
+      } catch (error) {
+        console.error(error);
+        alert('Erro ao excluir produto.');
+      }
     }
   };
 
@@ -169,17 +181,19 @@ const AdminPanel: React.FC = () => {
             <div className="flex gap-4 pt-4">
               <button
                 type="submit"
-                className={`flex-1 py-3 rounded-xl font-bold text-white shadow-lg transition-all transform hover:-translate-y-1
+                disabled={isLoading}
+                className={`flex-1 py-3 rounded-xl font-bold text-white shadow-lg transition-all transform hover:-translate-y-1 disabled:opacity-50 disabled:cursor-not-allowed
                   ${isEditing ? 'bg-blue-600 hover:bg-blue-700' : 'btn-primary'}
                 `}
               >
-                {isEditing ? 'Salvar Alterações' : 'Cadastrar Produto'}
+                {isLoading ? 'Salvando...' : (isEditing ? 'Salvar Alterações' : 'Cadastrar Produto')}
               </button>
               
               {isEditing && (
                 <button
                   type="button"
                   onClick={handleCancelEdit}
+                  disabled={isLoading}
                   className="px-6 py-3 rounded-xl font-bold text-zinc-400 bg-zinc-800 hover:bg-zinc-700 hover:text-white transition-all"
                 >
                   Cancelar

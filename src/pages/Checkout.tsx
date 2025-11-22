@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-
+import { supabase } from '../lib/supabase';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 
@@ -40,16 +40,48 @@ const Checkout: React.FC = () => {
     }
   };
 
-  const handlePlaceOrder = (e: React.FormEvent) => {
+  const handlePlaceOrder = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!user) return;
+    
     setIsProcessing(true);
 
-    // Simulação de processamento
-    setTimeout(() => {
-      setIsProcessing(false);
-      setOrderPlaced(true);
+    try {
+      // 1. Criar Pedido
+      const { data: order, error: orderError } = await supabase
+        .from('orders')
+        .insert({ 
+          user_id: user.id, 
+          total: total, 
+          status: 'Processando' 
+        })
+        .select()
+        .single();
+
+      if (orderError) throw orderError;
+
+      // 2. Criar Itens
+      const orderItems = items.map(item => ({
+        order_id: order.id,
+        product_id: item.id,
+        quantity: item.cartQuantity,
+        price: item.price
+      }));
+
+      const { error: itemsError } = await supabase
+        .from('order_items')
+        .insert(orderItems);
+
+      if (itemsError) throw itemsError;
+
       clearCart();
-    }, 2000);
+      setOrderPlaced(true);
+    } catch (error) {
+      console.error('Erro ao processar pedido:', error);
+      alert('Ocorreu um erro ao processar seu pedido. Tente novamente.');
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   if (orderPlaced) {

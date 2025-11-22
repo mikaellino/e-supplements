@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { supabase } from '../lib/supabase';
 
 export interface Product {
   id: number;
@@ -10,30 +11,13 @@ export interface Product {
   description?: string;
 }
 
-// MOCK DATA INITIALIZATION
-const MOCK_PRODUCTS: Product[] = [
-  // Whey Protein (Category 1)
-  { id: 1, name: 'Whey Protein Isolado', price: 149.90, image: '/wheypadrao.webp', quantity: 20, category_id: 1, description: 'Proteína isolada de alta qualidade.' },
-  { id: 2, name: 'Whey Protein Concentrado', price: 99.90, image: '/wheypadrao.webp', quantity: 50, category_id: 1, description: 'O melhor custo benefício.' },
-  { id: 3, name: 'Whey Protein Hidrolisado', price: 189.90, image: '/wheypadrao.webp', quantity: 15, category_id: 1, description: 'Absorção ultra rápida.' },
-  
-  // Creatina (Category 2)
-  { id: 4, name: 'Creatina Monohidratada', price: 69.90, image: '/wheypadrao.webp', quantity: 100, category_id: 2, description: 'Força e explosão muscular.' },
-  
-  // Vitaminas (Category 3)
-  { id: 5, name: 'Multivitamínico A-Z', price: 49.90, image: '/vitaminapadrao.webp', quantity: 30, category_id: 3, description: 'Saúde completa.' },
-  { id: 6, name: 'Vitamina C 1000mg', price: 29.90, image: '/vitaminapadrao.webp', quantity: 40, category_id: 3, description: 'Imunidade em dia.' },
-
-  // Pré-Treino (Category 4)
-  { id: 7, name: 'Pré-Treino Insane', price: 129.90, image: '/pretreinopadrao.webp', quantity: 25, category_id: 4, description: 'Foco e energia extrema.' },
-];
-
 interface ProductContextType {
   products: Product[];
   selectedProduct: Product | null;
   setSelectedProduct: (product: Product | null) => void;
-  updateProduct: (updatedProduct: Product) => void;
-  deleteProduct: (id: number) => void;
+  addProduct: (product: Omit<Product, 'id'>) => Promise<void>;
+  updateProduct: (updatedProduct: Product) => Promise<void>;
+  deleteProduct: (id: number) => Promise<void>;
   getProductById: (id: number) => Product | undefined;
 }
 
@@ -43,29 +27,54 @@ export const ProductProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [products, setProducts] = useState<Product[]>([]);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
 
-  // Load from localStorage or use Mocks
+  // Carregar produtos do Supabase
   useEffect(() => {
-    const storedProducts = localStorage.getItem('products');
-    if (storedProducts) {
-      setProducts(JSON.parse(storedProducts));
-    } else {
-      setProducts(MOCK_PRODUCTS);
-      localStorage.setItem('products', JSON.stringify(MOCK_PRODUCTS));
-    }
+    fetchProducts();
   }, []);
 
-  // Save to localStorage whenever products change
-  useEffect(() => {
-    if (products.length > 0) {
-      localStorage.setItem('products', JSON.stringify(products));
+  async function fetchProducts() {
+    const { data, error } = await supabase.from('products').select('*').order('id');
+    if (error) {
+      console.error('Error fetching products:', error);
     }
-  }, [products]);
+    if (data) {
+      setProducts(data);
+    }
+  }
 
-  const updateProduct = (updatedProduct: Product) => {
+  const addProduct = async (newProduct: Omit<Product, 'id'>) => {
+    const { data, error } = await supabase.from('products').insert(newProduct).select().single();
+    if (error) {
+      console.error('Error adding product:', error);
+      throw error;
+    }
+    if (data) {
+      setProducts(prev => [...prev, data]);
+    }
+  };
+
+  const updateProduct = async (updatedProduct: Product) => {
+    const { error } = await supabase
+      .from('products')
+      .update(updatedProduct)
+      .eq('id', updatedProduct.id);
+
+    if (error) {
+      console.error('Error updating product:', error);
+      throw error;
+    }
+
     setProducts(prev => prev.map(p => p.id === updatedProduct.id ? updatedProduct : p));
   };
 
-  const deleteProduct = (id: number) => {
+  const deleteProduct = async (id: number) => {
+    const { error } = await supabase.from('products').delete().eq('id', id);
+    
+    if (error) {
+      console.error('Error deleting product:', error);
+      throw error;
+    }
+
     setProducts(prev => prev.filter(p => p.id !== id));
   };
 
@@ -74,7 +83,7 @@ export const ProductProvider: React.FC<{ children: React.ReactNode }> = ({ child
   };
 
   return (
-    <ProductContext.Provider value={{ products, selectedProduct, setSelectedProduct, updateProduct, deleteProduct, getProductById }}>
+    <ProductContext.Provider value={{ products, selectedProduct, setSelectedProduct, addProduct, updateProduct, deleteProduct, getProductById }}>
       {children}
     </ProductContext.Provider>
   );

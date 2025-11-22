@@ -1,10 +1,11 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { supabase } from '../lib/supabase';
 
 interface User {
-  id: number;
+  id: string;
   name: string;
   email: string;
-  role: string;
+  role?: string;
 }
 
 interface AuthContextType {
@@ -13,7 +14,7 @@ interface AuthContextType {
   isLoggingOut: boolean;
   login: (email: string, password: string) => Promise<void>;
   register: (name: string, email: string, password: string) => Promise<void>;
-  logout: () => void;
+  logout: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -23,64 +24,65 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(null);
   const [isLoggingOut, setIsLoggingOut] = useState(false);
 
-  // Ao iniciar, verifica se já tem token salvo (Persistência)
   useEffect(() => {
-    const storedUser = localStorage.getItem('user');
-    const token = localStorage.getItem('token');
-    
-    if (storedUser && token) {
-      setUser(JSON.parse(storedUser));
-      setIsLoggedIn(true);
-    }
+    // Check active session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) {
+        console.log("Initial Session Metadata:", session.user.user_metadata); // Debug
+        setUser({
+          id: session.user.id,
+          email: session.user.email!,
+          name: session.user.user_metadata.name || '',
+          role: session.user.user_metadata.role || 'user'
+        });
+        setIsLoggedIn(true);
+      }
+    });
+
+    // Listen for auth changes
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      console.log("Auth State Change:", _event, session); // Debug
+      if (session?.user) {
+        console.log("User Metadata:", session.user.user_metadata); // Debug
+        setUser({
+          id: session.user.id,
+          email: session.user.email!,
+          name: session.user.user_metadata.name || '',
+          role: session.user.user_metadata.role || 'user'
+        });
+        setIsLoggedIn(true);
+      } else {
+        setUser(null);
+        setIsLoggedIn(false);
+      }
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
   const login = async (email: string, password: string) => {
-    const response = await fetch('http://localhost:3000/api/login', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, password }),
-    });
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      throw new Error(data.error || 'Falha no login');
-    }
-
-    // Salva no navegador para não perder ao atualizar a página
-    localStorage.setItem('token', data.token);
-    localStorage.setItem('user', JSON.stringify(data.user));
-
-    setUser(data.user);
-    setIsLoggedIn(true);
+    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) throw error;
   };
 
   const register = async (name: string, email: string, password: string) => {
-    const response = await fetch('http://localhost:3000/api/register', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ name, email, password }),
+    const { error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: { data: { name } }
     });
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      throw new Error(data.error || 'Falha no cadastro');
-    }
-    
+    if (error) throw error;
   };
 
-  const logout = () => {
+  const logout = async () => {
     setIsLoggingOut(true);
-    
-    // Simula um pequeno delay para mostrar o loading
-    setTimeout(() => {
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
-      setIsLoggedIn(false);
-      setUser(null);
+    try {
+      await supabase.auth.signOut();
+    } finally {
       setIsLoggingOut(false);
-    }, 1500);
+    }
   };
 
   return (
